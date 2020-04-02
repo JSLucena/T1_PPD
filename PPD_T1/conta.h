@@ -8,4 +8,4 @@ typedef struct
     float Saldo; 
 } Conta;
 
-#endiftouch
+#endif

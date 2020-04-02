@@ -166,6 +166,8 @@ requestid_2_svc(void *argp, struct svc_req *rqstp)
 
 	result = requestID++;
 
+	fprintf("[requestid_2_svc] = %d", result);
+
 	return &result;
 }
 

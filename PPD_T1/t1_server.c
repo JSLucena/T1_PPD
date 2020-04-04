@@ -8,9 +8,26 @@
 #include "t1.h"
 #include "conta.h"
 
-#define TOTALCONTAS 10
+#define TOTALCONTAS  10
 
-Conta contas[TOTALCONTAS];
+#define DISPONIVEL  -1
+#define OK           1 
+#define NOK          0
+#define RETIRADA     20
+#define DEPOSITO     21
+
+Conta static contas[TOTALCONTAS] = {
+	{666, 123456, 606.06},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+	{ -1,      0,   0.00},
+};
 
 int static requestID = 0;
 
@@ -20,18 +37,66 @@ int ValidarConta( ATMRecord *argp )
 	int result;
  	for (int i = 0; i < TOTALCONTAS; i++)
 	{
-		if ( (argp->clientID  == contas[i].ClientID) && 
+		if ( (argp->clientID  == contas[i].Account) && 
 		     (argp->senha  == contas[i].Senha) )
 		{
-			result = 1;
+			result = OK;
 		}
 		else
 		{
-			result = 0;
+			result = NOK;
 		}		
 	}
 
 	return result;
+}
+
+
+float EncontraSaldo (ATMRecord *argp)
+{
+	static float result;
+	
+	for (int i = 0; i < TOTALCONTAS; i++)
+	{
+		if ( argp->thisAccount == contas[i].Account)
+		{
+			result = contas[i].Saldo;
+		}
+	}
+
+	return result;
+}
+
+int ManipularSaldo (ATMRecord *argp, int operacao)
+{
+	static int result;
+
+	for (int i = 0; i < TOTALCONTAS; i++)
+	{
+		if ( ( contas[i].Account == argp->thisAccount ) &&
+		     ( contas[i].Senha   == argp->senha       ) )
+		{
+			switch (operacao)
+			{
+				case DEPOSITO:
+					contas[i].Saldo += argp->valor;	
+				break;
+
+				case RETIRADA:
+					contas[i].Saldo -= argp->valor;	
+				break;
+			}
+
+			
+			result = OK;
+		}
+		else
+		{
+			result = NOK;
+		}		
+	}
+
+	return result;	
 }
 
 float *
@@ -39,9 +104,7 @@ saldo_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static float  result;
 
-	/*
-	 * insert server code here
-	 */
+	result = EncontraSaldo( argp );	
 
 	return &result;
 }
@@ -51,9 +114,7 @@ deposito_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
+	result = ManipularSaldo( argp, DEPOSITO);
 
 	return &result;
 }
@@ -63,9 +124,7 @@ retirada_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
+	result = ManipularSaldo( argp, RETIRADA);
 
 	return &result;
 }
@@ -103,8 +162,6 @@ requestid_1_svc(void *argp, struct svc_req *rqstp)
 
 	result = requestID++;
 
-	fprintf("[requestid_1_svc] = %d", result);
-
 	return &result;
 }
 
@@ -113,9 +170,7 @@ autenticacao_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {	
 	static int  result;
 
-	result = ValidarConta( &argp );
-	
-	fprintf("[autenticacao_1_svc] = %d", result);
+	result = ValidarConta( argp );
 
 	return &result;
 }
@@ -125,11 +180,7 @@ saldo_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static float  result;
 
-	if ( ValidarConta( &argp ) == 1 )
-	{
-		resul
-	}
-	
+	result = EncontraSaldo( argp );
 
 	return &result;
 }
@@ -139,9 +190,7 @@ deposito_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
+	result = ManipularSaldo( argp, DEPOSITO );
 
 	return &result;
 }
@@ -151,9 +200,7 @@ retirada_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
+	result = ManipularSaldo( argp, RETIRADA );
 
 	return &result;
 }
@@ -189,8 +236,6 @@ requestid_2_svc(void *argp, struct svc_req *rqstp)
 
 	result = requestID++;
 
-	fprintf("[requestid_2_svc] = %d", result);
-
 	return &result;
 }
 
@@ -199,10 +244,8 @@ autenticacao_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
-
+	result = ValidarConta( argp );
+	
 	return &result;
 }
 
@@ -223,9 +266,22 @@ abertura_2_svc(bankRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
+	for (int i = 0; i < TOTALCONTAS; i++)
+	{
+		if ( contas[i].Account == DISPONIVEL )
+		{
+			contas[i].Account = argp->accNumber;
+			contas[i].Senha = argp->password;
 
+			result = OK;
+			break;
+		}
+		else
+		{
+			result = NOK;
+		}
+		
+	}
+	
 	return &result;
 }

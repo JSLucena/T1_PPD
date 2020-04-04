@@ -3,7 +3,7 @@
 
 typedef struct 
 {
-    int  ClientID;   
+    int Account;   
     int Senha;    
     float Saldo; 
 } Conta;

@@ -8,10 +8,31 @@
 #include "t1.h"
 #include "conta.h"
 
-Conta contas[10];
+#define TOTALCONTAS 10
+
+Conta contas[TOTALCONTAS];
 
 int static requestID = 0;
 
+
+int ValidarConta( ATMRecord *argp )
+{
+	int result;
+ 	for (int i = 0; i < TOTALCONTAS; i++)
+	{
+		if ( (argp->clientID  == contas[i].ClientID) && 
+		     (argp->senha  == contas[i].Senha) )
+		{
+			result = 1;
+		}
+		else
+		{
+			result = 0;
+		}		
+	}
+
+	return result;
+}
 
 float *
 saldo_1_svc(ATMRecord *argp, struct svc_req *rqstp)
@@ -78,7 +99,7 @@ retiradafalha_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 int *
 requestid_1_svc(void *argp, struct svc_req *rqstp)
 {
-	static int  result;
+	static int  result;	
 
 	result = requestID++;
 
@@ -92,9 +113,9 @@ autenticacao_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {	
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
+	result = ValidarConta( &argp );
+	
+	fprintf("[autenticacao_1_svc] = %d", result);
 
 	return &result;
 }
@@ -104,9 +125,11 @@ saldo_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static float  result;
 
-	/*
-	 * insert server code here
-	 */
+	if ( ValidarConta( &argp ) == 1 )
+	{
+		resul
+	}
+	
 
 	return &result;
 }

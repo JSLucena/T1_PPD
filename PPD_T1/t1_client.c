@@ -12,7 +12,7 @@ void printmenucaixa()
 	printf("[3] retirar\n");
 	printf("[4] depositar falha\n");
 	printf("[5] retirar falha\n");
-	printf("[e] sair\n");
+	printf("[e] sair\n\n");
 }
 
 void printmenuagencia()
@@ -24,7 +24,7 @@ void printmenuagencia()
 	printf("[5] retirar falha\n");
 	printf("[6] abrir conta\n");
 	printf("[7] fechar conta\n");
-	printf("[e] sair\n");
+	printf("[e] sair\n\n");
 }
 
 
@@ -70,9 +70,9 @@ bank_1(char *host)
 				}
 				saldo.clientID = *ID;
 				printf("digite numero da conta: ");
-				scanf("%d\n",&saldo.thisAccount);
+				scanf("%d",&saldo.thisAccount);
 				printf("digite a senha: ");
-				scanf("%d\n",&saldo.senha);
+				scanf("%d",&saldo.senha);
 
 
 				authResult = autenticacao_1(&saldo, clnt);
@@ -106,11 +106,11 @@ bank_1(char *host)
 				}
 				deposito.clientID = *ID;
 				printf("digite numero da conta: ");
-				scanf("%d\n",&deposito.thisAccount);
+				scanf("%d",&deposito.thisAccount);
 				printf("digite a senha: ");
-				scanf("%d\n",&deposito.senha);
+				scanf("%d",&deposito.senha);
 				printf("digite o valor: ");
-				scanf("%f\n",&deposito.valor);
+				scanf("%f",&deposito.valor);
 				authResult = autenticacao_1(&deposito, clnt);
 				if (authResult == (int *) NULL) 
 				{
@@ -178,10 +178,10 @@ void
 bank_2(char *host)
 {
 	CLIENT *clnt;
-	float  *result_1;
+	float  *valSaldo;
 	ATMRecord  saldo;
-	int  *result_2;
-	ATMRecord  deposito_2_arg;
+	int  *depositResult;
+	ATMRecord  deposito;
 	int  *result_3;
 	ATMRecord  retirada_2_arg;
 	int  *result_4;
@@ -196,6 +196,7 @@ bank_2(char *host)
 	ATMRecord  autenticacao_2_arg;
 	int  *ID;
 	char *requestid_2_arg;
+	int *authResult;
 
 
 	char menu = 'x';
@@ -212,6 +213,84 @@ bank_2(char *host)
 		scanf("%c",&menu);
 		switch(menu)
 		{
+			case('1'):
+				printf("requesting ID\n");
+				ID = requestid_2((void*)&requestid_2_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				saldo.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&saldo.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&saldo.senha);
+
+
+				authResult = autenticacao_2(&saldo, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				valSaldo = saldo_2(&saldo, clnt);
+				if (valSaldo == (float *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request de saldo");
+					break;
+				}
+				saldo.valor = *valSaldo;
+				printf("saldo: %f\n",saldo.valor);
+				break;
+			case('2'):
+				printf("requesting ID\n");
+				ID = requestid_2((void*)&requestid_2_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				deposito.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&deposito.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&deposito.senha);
+				printf("digite o valor: ");
+				scanf("%f",&deposito.valor);
+				authResult = autenticacao_2(&deposito, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				depositResult = deposito_2(&deposito, clnt);
+				if (depositResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "Deposit failed");
+					break;
+				}
+				if(*depositResult == 1 )
+				{
+					printf("deposito concluido");
+				}
+				else
+				{
+					printf("deposito falhou");
+				}
+				break;
 			case('6'):
 				ID = requestid_2((void*)&requestid_2_arg, clnt);
 				if (ID == (int *) NULL) 
@@ -221,9 +300,9 @@ bank_2(char *host)
 				}
 				abertura.clientID = *ID;
 				printf("escolha um numero entre 1 e 10000: ");
-				scanf("%d\n",&abertura.accNumber);
+				scanf("%d",&abertura.accNumber);
 				printf("escolha uma senha de 4 digitos: ");
-				scanf("%d\n",&abertura.password);
+				scanf("%d",&abertura.password);
 
 				accOpen = abertura_2(&abertura, clnt);
 				if (accOpen == (int *) NULL) 
@@ -288,13 +367,16 @@ int
 main (int argc, char *argv[])
 {
 	char *host;
-
+	int type;
 	if (argc < 2) {
-		printf ("usage: %s server_host\n", argv[0]);
+		printf ("usage: %s server_host client(1:caixa 2:agencia)\n", argv[0]);
 		exit (1);
 	}
 	host = argv[1];
-	bank_1 (host);
-	bank_2 (host);
+	type = atoi(argv[2]);
+	if(type == 1)
+		bank_1 (host);
+	else
+		bank_2 (host);
 exit (0);
 }

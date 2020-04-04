@@ -13,8 +13,8 @@
 #define DISPONIVEL  -1
 #define OK           1 
 #define NOK          0
-#define RETIRADA     20
-#define DEPOSITO     21
+#define RETIRA     20
+#define DEPOSITA     21
 
 Conta static contas[TOTALCONTAS] = {
 	{666, 123456, 606.06},
@@ -37,10 +37,11 @@ int ValidarConta( ATMRecord *argp )
 	int result;
  	for (int i = 0; i < TOTALCONTAS; i++)
 	{
-		if ( (argp->clientID  == contas[i].Account) && 
+		if ( (argp->thisAccount  == contas[i].Account) && 
 		     (argp->senha  == contas[i].Senha) )
 		{
 			result = OK;
+			break;
 		}
 		else
 		{
@@ -55,7 +56,7 @@ int ValidarConta( ATMRecord *argp )
 float EncontraSaldo (ATMRecord *argp)
 {
 	static float result;
-	
+	fprintf(stderr,"Starting EncontraSaldo for account %d\n",argp->thisAccount);
 	for (int i = 0; i < TOTALCONTAS; i++)
 	{
 		if ( argp->thisAccount == contas[i].Account)
@@ -63,39 +64,39 @@ float EncontraSaldo (ATMRecord *argp)
 			result = contas[i].Saldo;
 		}
 	}
-
+	fprintf(stderr,"Finishing EncontraSaldo for account %d\n",argp->thisAccount);
 	return result;
 }
 
 int ManipularSaldo (ATMRecord *argp, int operacao)
 {
 	static int result;
-
+	fprintf(stderr,"Starting ManipularSaldo for account %d\n",argp->thisAccount);
 	for (int i = 0; i < TOTALCONTAS; i++)
 	{
-		if ( ( contas[i].Account == argp->thisAccount ) &&
-		     ( contas[i].Senha   == argp->senha       ) )
+		if ( ( contas[i].Account == argp->thisAccount ))
 		{
 			switch (operacao)
 			{
-				case DEPOSITO:
+				case DEPOSITA:
 					contas[i].Saldo += argp->valor;	
 				break;
 
-				case RETIRADA:
+				case RETIRA:
 					contas[i].Saldo -= argp->valor;	
 				break;
 			}
 
 			
 			result = OK;
+			break;
 		}
 		else
 		{
 			result = NOK;
 		}		
 	}
-
+	fprintf(stderr,"Finishing ManipularSaldo for account %d\n",argp->thisAccount);
 	return result;	
 }
 
@@ -114,7 +115,7 @@ deposito_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	result = ManipularSaldo( argp, DEPOSITO);
+	result = ManipularSaldo( argp, DEPOSITA);
 
 	return &result;
 }
@@ -124,7 +125,7 @@ retirada_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	result = ManipularSaldo( argp, RETIRADA);
+	result = ManipularSaldo( argp, RETIRA);
 
 	return &result;
 }
@@ -158,20 +159,22 @@ retiradafalha_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 int *
 requestid_1_svc(void *argp, struct svc_req *rqstp)
 {
+	fprintf(stderr,"RequestID started\n");
 	static int  result;	
 
 	result = requestID++;
-
+	fprintf(stderr,"Returning ID %d\n",result);
 	return &result;
 }
 
 int *
 autenticacao_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {	
+	fprintf(stderr,"Autentication started\n");
 	static int  result;
 
 	result = ValidarConta( argp );
-
+	fprintf(stderr,"Autentication finished with %d\n",result);
 	return &result;
 }
 
@@ -190,7 +193,7 @@ deposito_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	result = ManipularSaldo( argp, DEPOSITO );
+	result = ManipularSaldo( argp, DEPOSITA);
 
 	return &result;
 }
@@ -200,7 +203,7 @@ retirada_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	result = ManipularSaldo( argp, RETIRADA );
+	result = ManipularSaldo( argp, RETIRA );
 
 	return &result;
 }
@@ -232,20 +235,22 @@ retiradafalha_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 int *
 requestid_2_svc(void *argp, struct svc_req *rqstp)
 {
+	fprintf(stderr,"Request ID started\n");
 	static int  result;
 
 	result = requestID++;
-
+	fprintf(stderr,"Returning ID %d\n",result);
 	return &result;
 }
 
 int *
 autenticacao_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
+	fprintf(stderr,"Autentication started\n");
 	static int  result;
 
 	result = ValidarConta( argp );
-	
+	fprintf(stderr,"Autentication finished\n");
 	return &result;
 }
 
@@ -264,8 +269,9 @@ fechamento_2_svc(bankRecord *argp, struct svc_req *rqstp)
 int *
 abertura_2_svc(bankRecord *argp, struct svc_req *rqstp)
 {
+	fprintf(stderr,"Acc Opening started\n");
 	static int  result;
-
+	int debug;
 	for (int i = 0; i < TOTALCONTAS; i++)
 	{
 		if ( contas[i].Account == DISPONIVEL )
@@ -274,6 +280,8 @@ abertura_2_svc(bankRecord *argp, struct svc_req *rqstp)
 			contas[i].Senha = argp->password;
 
 			result = OK;
+
+			debug = i;
 			break;
 		}
 		else
@@ -282,6 +290,6 @@ abertura_2_svc(bankRecord *argp, struct svc_req *rqstp)
 		}
 		
 	}
-	
+	fprintf(stderr,"Acc Opening concluced for %d with pass %d\n",contas[debug].Account,contas[debug].Senha);
 	return &result;
 }

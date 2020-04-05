@@ -36,11 +36,11 @@ bank_1(char *host)
 	ATMRecord  saldo;
 	int  *depositResult;
 	ATMRecord  deposito;
-	int  *result_3;
+	int  *retiradaResult;
 	ATMRecord  retirada;
-	int  *result_4;
+	int  *depFalhaResult;
 	ATMRecord  depositofalha;
-	int  *result_5;
+	int  *retFalhaResult;
 	ATMRecord  retiradafalha;
 	int  *ID;
 	char *requestid_1_arg;
@@ -60,6 +60,7 @@ bank_1(char *host)
 		scanf("%c",&menu);
 		switch(menu)
 		{
+			//###############################SALDO#####################################
 			case('1'):
 				printf("requesting ID\n");
 				ID = requestid_1((void*)&requestid_1_arg, clnt);
@@ -96,6 +97,7 @@ bank_1(char *host)
 				saldo.valor = *valSaldo;
 				printf("saldo: %f\n",saldo.valor);
 				break;
+//###############################DEPOSITO#####################################
 			case('2'):
 				printf("requesting ID\n");
 				ID = requestid_1((void*)&requestid_1_arg, clnt);
@@ -138,6 +140,136 @@ bank_1(char *host)
 					printf("deposito falhou");
 				}
 				break;
+//###############################RETIRADA#####################################
+			case('3'):
+				
+				ID = requestid_1((void*)&requestid_1_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				retirada.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&retirada.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&retirada.senha);
+				printf("digite o valor: ");
+				scanf("%f",&retirada.valor);
+				printf("requesting ID\n");
+				authResult = autenticacao_1(&retirada, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				retiradaResult = retirada_1(&retirada, clnt);
+				if (retiradaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "operation failed");
+					break;
+				}
+				if(*retiradaResult == 1 )
+				{
+					printf("retirada concluida");
+				}
+				else
+				{
+					printf("retirada falhou");
+				}
+				break;
+//###############################DEPOSITO COM FALHA#####################################				
+			case('4'):
+				printf("requesting ID\n");
+				ID = requestid_1((void*)&requestid_1_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				depositofalha.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&depositofalha.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&depositofalha.senha);
+				printf("digite o valor: ");
+				scanf("%f",&depositofalha.valor);
+				authResult = autenticacao_1(&depositofalha, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				depFalhaResult = depositofalha_1(&depositofalha, clnt);
+				if (depFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "Deposit failed");
+					break;
+				}
+				if(*depFalhaResult == 1 )
+				{
+					printf("deposito concluido");
+				}
+				else
+				{
+					printf("deposito falhou");
+				}
+				break;
+//###############################DEPOSITO COM FALHA#####################################
+			case('5'):
+				ID = requestid_1((void*)&requestid_1_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				retiradafalha.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&retiradafalha.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&retiradafalha.senha);
+				printf("digite o valor: ");
+				scanf("%f",&retiradafalha.valor);
+				printf("requesting ID\n");
+				authResult = autenticacao_1(&retiradafalha, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				retFalhaResult = retiradafalha_1(&retiradafalha, clnt);
+				if (retFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "operation failed");
+					break;
+				}
+				if(*retFalhaResult == 1 )
+				{
+					printf("retirada concluida");
+				}
+				else
+				{
+					printf("retirada falhou");
+				}
+				break;
 			case('e'):
 				return;
 	
@@ -146,28 +278,6 @@ bank_1(char *host)
 	}
 #endif	/* DEBUG */
 
-	/*
-	result_3 = retirada_1(&retirada_1_arg, clnt);
-	if (result_3 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}
-	result_4 = depositofalha_1(&depositofalha_1_arg, clnt);
-	if (result_4 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}
-	result_5 = retiradafalha_1(&retiradafalha_1_arg, clnt);
-	if (result_5 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}
-	result_6 = requestid_1((void*)&requestid_1_arg, clnt);
-	if (result_6 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}
-	result_7 = autenticacao_1(&autenticacao_1_arg, clnt);
-	if (result_7 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
-	}
-	*/
 #ifndef	DEBUG
 	clnt_destroy (clnt);
 #endif	 /* DEBUG */
@@ -182,16 +292,16 @@ bank_2(char *host)
 	ATMRecord  saldo;
 	int  *depositResult;
 	ATMRecord  deposito;
-	int  *result_3;
-	ATMRecord  retirada_2_arg;
-	int  *result_4;
-	ATMRecord  depositofalha_2_arg;
-	int  *result_5;
-	ATMRecord  retiradafalha_2_arg;
+	int  *retiradaResult;
+	ATMRecord  retirada;
+	int  *depFalhaResult;
+	ATMRecord  depositofalha;
+	int  *retFalhaResult;
+	ATMRecord  retiradafalha;
 	int  *accOpen;
 	bankRecord  abertura;
-	int  *result_7;
-	bankRecord  fechamento_2_arg;
+	int  *accClose;
+	bankRecord  fechamento;
 	int  *result_8;
 	ATMRecord  autenticacao_2_arg;
 	int  *ID;
@@ -213,6 +323,7 @@ bank_2(char *host)
 		scanf("%c",&menu);
 		switch(menu)
 		{
+//###############################SALDO#####################################			
 			case('1'):
 				printf("requesting ID\n");
 				ID = requestid_2((void*)&requestid_2_arg, clnt);
@@ -249,6 +360,7 @@ bank_2(char *host)
 				saldo.valor = *valSaldo;
 				printf("saldo: %f\n",saldo.valor);
 				break;
+//###############################DEPOSITO#####################################
 			case('2'):
 				printf("requesting ID\n");
 				ID = requestid_2((void*)&requestid_2_arg, clnt);
@@ -291,6 +403,137 @@ bank_2(char *host)
 					printf("deposito falhou");
 				}
 				break;
+//###############################RETIRADA#####################################
+			case('3'):
+				ID = requestid_2((void*)&requestid_2_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				retirada.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&retirada.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&retirada.senha);
+				printf("digite o valor: ");
+				scanf("%f",&retirada.valor);
+				printf("requesting ID\n");
+				authResult = autenticacao_2(&retirada, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				retiradaResult = retirada_2(&retirada, clnt);
+				if (retiradaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "operation failed");
+					break;
+				}
+				if(*retiradaResult == 1 )
+				{
+					printf("retirada concluida");
+				}
+				else
+				{
+					printf("retirada falhou");
+				}
+				break;
+//###############################DEPOSITO COM FALHA#####################################
+			case('4'):
+				printf("requesting ID\n");
+				ID = requestid_2((void*)&requestid_2_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				depositofalha.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&depositofalha.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&depositofalha.senha);
+				printf("digite o valor: ");
+				scanf("%f",&depositofalha.valor);
+				authResult = autenticacao_2(&depositofalha, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				depFalhaResult = deposito_2(&depositofalha, clnt);
+				if (depFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "Deposit failed");
+					break;
+				}
+				if(*depFalhaResult == 1 )
+				{
+					printf("deposito concluido");
+				}
+				else
+				{
+					printf("deposito falhou");
+				}
+				break;
+//###############################RETIRADA COM FALHA#####################################
+			case('5'):
+				ID = requestid_2((void*)&requestid_2_arg, clnt);
+				if (ID == (int *) NULL)
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				retiradafalha.clientID = *ID;
+				printf("digite numero da conta: ");
+				scanf("%d",&retiradafalha.thisAccount);
+				printf("digite a senha: ");
+				scanf("%d",&retiradafalha.senha);
+				printf("digite o valor: ");
+				scanf("%f",&retiradafalha.valor);
+				printf("requesting ID\n");
+				authResult = autenticacao_2(&retiradafalha, clnt);
+				if (authResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "falha no request da autenticacao");
+					break;
+				}
+
+				if(*authResult == 0)
+				{
+					printf("Dados errados ou conta inexistente");
+					break;
+				}
+				retFalhaResult = retirada_2(&retiradafalha, clnt);
+				if (retFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "operation failed");
+					break;
+				}
+				if(*retFalhaResult == 1 )
+				{
+					printf("retirada concluida");
+				}
+				else
+				{
+					printf("retirada falhou");
+				}
+				break;
+
+//###############################ABERTURA#####################################
 			case('6'):
 				ID = requestid_2((void*)&requestid_2_arg, clnt);
 				if (ID == (int *) NULL) 
@@ -320,7 +563,36 @@ bank_2(char *host)
 					printf("account creation failed\n");
 					break;
 				}
-				
+//###############################FECHAMENTO#####################################
+			case('7'):
+				ID = requestid_2((void*)&requestid_2_arg, clnt);
+				if (ID == (int *) NULL) 
+				{
+					clnt_perror (clnt, "ID request failed");
+					break;
+				}
+				fechamento.clientID = *ID;
+				printf("digite o numero da conta que deseja fechar: ");
+				scanf("%d",&fechamento.accNumber);
+				printf("digite a senha: ");
+				scanf("%d",&fechamento.password);
+
+				accClose = fechamento_2(&fechamento, clnt);
+				if (accClose == (int *) NULL) 
+				{
+					clnt_perror (clnt, "request de fechamento falhou");
+					break;
+				}
+				if(*accClose == 1)
+				{
+					printf("account removed succesfully\n");
+					break;
+				}
+				else
+				{
+					printf("account removal failed\n");
+					break;
+				}
 			case('e'):
 				return;
 		}

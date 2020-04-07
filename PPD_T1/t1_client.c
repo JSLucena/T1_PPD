@@ -216,6 +216,20 @@ bank_1(char *host)
 				if (depFalhaResult == (int *) NULL) 
 				{
 					clnt_perror (clnt, "Deposit failed");
+					
+				}
+				if(*depFalhaResult == 1 )
+				{
+					printf("deposito concluido");
+				}
+				else
+				{
+					printf("deposito falhou");
+				}
+				depFalhaResult = deposito_1(&depositofalha, clnt);
+				if (depFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "Deposit failed");
 					break;
 				}
 				if(*depFalhaResult == 1 )
@@ -256,6 +270,20 @@ bank_1(char *host)
 					break;
 				}
 				retFalhaResult = retiradafalha_1(&retiradafalha, clnt);
+				if (retFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "operation failed");
+					
+				}
+				if(*retFalhaResult == 1 )
+				{
+					printf("retirada concluida");
+				}
+				else
+				{
+					printf("retirada falhou");
+				}
+				retFalhaResult = retirada_1(&retiradafalha, clnt);
 				if (retFalhaResult == (int *) NULL) 
 				{
 					clnt_perror (clnt, "operation failed");
@@ -402,7 +430,7 @@ bank_2(char *host)
 				{
 					printf("deposito falhou");
 				}
-				break;
+				
 //###############################RETIRADA#####################################
 			case('3'):
 				ID = requestid_2((void*)&requestid_2_arg, clnt);
@@ -474,6 +502,20 @@ bank_2(char *host)
 					printf("Dados errados ou conta inexistente");
 					break;
 				}
+				depFalhaResult = depositofalha_2(&depositofalha, clnt);
+				if (depFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "Deposit failed");
+					
+				}
+				if(*depFalhaResult == 1 )
+				{
+					printf("deposito concluido");
+				}
+				else
+				{
+					printf("deposito falhou");
+				}
 				depFalhaResult = deposito_2(&depositofalha, clnt);
 				if (depFalhaResult == (int *) NULL) 
 				{
@@ -516,6 +558,20 @@ bank_2(char *host)
 				{
 					printf("Dados errados ou conta inexistente");
 					break;
+				}
+				retFalhaResult = retiradafalha_2(&retiradafalha, clnt);
+				if (retFalhaResult == (int *) NULL) 
+				{
+					clnt_perror (clnt, "operation failed");
+					
+				}
+				if(*retFalhaResult == 1 )
+				{
+					printf("retirada concluida");
+				}
+				else
+				{
+					printf("retirada falhou");
 				}
 				retFalhaResult = retirada_2(&retiradafalha, clnt);
 				if (retFalhaResult == (int *) NULL) 

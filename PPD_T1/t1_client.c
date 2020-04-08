@@ -430,7 +430,7 @@ bank_2(char *host)
 				{
 					printf("deposito falhou");
 				}
-				
+				break;
 //###############################RETIRADA#####################################
 			case('3'):
 				ID = requestid_2((void*)&requestid_2_arg, clnt);

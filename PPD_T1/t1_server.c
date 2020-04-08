@@ -30,7 +30,7 @@ Conta static contas[TOTALCONTAS] = {
 };
 
 int static requestID = 0;
-
+int static lastRequest = -1;
 
 int ValidarConta( ATMRecord *argp )
 {
@@ -106,7 +106,7 @@ saldo_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 	static float  result;
 
 	result = EncontraSaldo( argp );	
-
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -114,9 +114,14 @@ int *
 deposito_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
-
-	result = ManipularSaldo( argp, DEPOSITA);
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, DEPOSITA);
+	else
+	{
+		fprintf(stderr,"operation already done, resending results\n");
+		result = 1;
+	}
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -124,9 +129,14 @@ int *
 retirada_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
-
-	result = ManipularSaldo( argp, RETIRA);
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, RETIRA);
+	else
+	{
+		fprintf(stderr,"operation already done, resending results\n");
+		result = 1;
+	}
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -135,10 +145,11 @@ depositofalha_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, DEPOSITA);
+	lastRequest = argp->clientID;
+	result = 0;
+	fprintf(stderr,"Error, Return failed\n");
 	return &result;
 }
 
@@ -147,10 +158,11 @@ retiradafalha_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, RETIRA);
+	lastRequest = argp->clientID;
+	result = 0;
+	fprintf(stderr,"Error, Return failed\n");
 	return &result;
 }
 
@@ -164,6 +176,7 @@ requestid_1_svc(void *argp, struct svc_req *rqstp)
 
 	result = requestID++;
 	fprintf(stderr,"Returning ID %d\n",result);
+	
 	return &result;
 }
 
@@ -175,6 +188,7 @@ autenticacao_1_svc(ATMRecord *argp, struct svc_req *rqstp)
 
 	result = ValidarConta( argp );
 	fprintf(stderr,"Autentication finished with %d\n",result);
+
 	return &result;
 }
 
@@ -184,7 +198,7 @@ saldo_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 	static float  result;
 
 	result = EncontraSaldo( argp );
-
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -192,9 +206,14 @@ int *
 deposito_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
-
-	result = ManipularSaldo( argp, DEPOSITA);
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, DEPOSITA);
+	else
+	{
+		fprintf(stderr,"operation already done, resending results\n");
+		result = 1;
+	}
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -202,9 +221,16 @@ int *
 retirada_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
-
-	result = ManipularSaldo( argp, RETIRA );
-
+	if(lastRequest != argp->clientID)
+	{
+		result = ManipularSaldo( argp, RETIRA );
+	}
+	else
+	{
+		fprintf(stderr,"operation already done, resending results\n");
+		result = 1;
+	}
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -213,10 +239,11 @@ depositofalha_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, DEPOSITA);
+	lastRequest = argp->clientID;
+	result = 0;
+	fprintf(stderr,"Error, Return failed\n");
 	return &result;
 }
 
@@ -225,10 +252,11 @@ retiradafalha_2_svc(ATMRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
 
-	/*
-	 * insert server code here
-	 */
-
+	if(lastRequest != argp->clientID)
+		result = ManipularSaldo( argp, RETIRA );
+	lastRequest = argp->clientID;
+	result = 0;
+	fprintf(stderr,"Error, Return failed\n");
 	return &result;
 }
 
@@ -258,11 +286,19 @@ int *
 fechamento_2_svc(bankRecord *argp, struct svc_req *rqstp)
 {
 	static int  result;
-
-	/*
-	 * insert server code here
-	 */
-
+	for (int i = 0; i < TOTALCONTAS; i++)
+	{
+		if(contas[i].Account == argp->accNumber)
+		{
+			contas[i].Account = DISPONIVEL;
+			contas[i].Saldo = 0.0;
+			contas[i].Senha = 0;
+			result = 1;
+			break;
+		}
+		result = 0;
+	}
+	lastRequest = argp->clientID;
 	return &result;
 }
 
@@ -272,24 +308,29 @@ abertura_2_svc(bankRecord *argp, struct svc_req *rqstp)
 	fprintf(stderr,"Acc Opening started\n");
 	static int  result;
 	int debug;
-	for (int i = 0; i < TOTALCONTAS; i++)
+	if(lastRequest != argp->clientID)
 	{
-		if ( contas[i].Account == DISPONIVEL )
+		for (int i = 0; i < TOTALCONTAS; i++)
 		{
-			contas[i].Account = argp->accNumber;
-			contas[i].Senha = argp->password;
+			if ( contas[i].Account == DISPONIVEL )
+			{
+				contas[i].Account = argp->accNumber;
+				contas[i].Senha = argp->password;
 
-			result = OK;
+				result = OK;
 
-			debug = i;
-			break;
+				debug = i;
+				break;
+			}
+			else
+			{
+				result = NOK;
+			}
+			
 		}
-		else
-		{
-			result = NOK;
-		}
-		
+	
+		fprintf(stderr,"Acc Opening concluced for %d with pass %d\n",contas[debug].Account,contas[debug].Senha);
 	}
-	fprintf(stderr,"Acc Opening concluced for %d with pass %d\n",contas[debug].Account,contas[debug].Senha);
+	lastRequest = argp->clientID;
 	return &result;
 }
